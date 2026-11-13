@@ -5,6 +5,9 @@ import StreakTracker from './components/StreakTracker';
 import Savings3DViewer from './components/Savings3DViewer';
 import PictureReveal from './components/PictureReveal';
 import CheckInButton from './components/CheckInButton';
+import FinancialDashboard from './components/FinancialDashboard';
+import AchievementBadges from './components/AchievementBadges';
+import SavingsGoalsSelector from './components/SavingsGoalsSelector';
 import ConfettiEffect from './components/ConfettiEffect';
 import FloatingBalloons from './components/FloatingBalloons';
 import ChibiCompanion from './components/ChibiCompanion';
@@ -27,10 +30,11 @@ export default function App() {
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
   const [currentRealMonth] = useState(new Date().getMonth() + 1);
   const [useCustomImage, setUseCustomImage] = useState(false);
-  const [viewMode, setViewMode] = useState('3d'); // '3d' hoặc '2d'
+  const [activeTab, setActiveTab] = useState('3d'); // '3d', 'dashboard', 'badges', 'picture'
   const [loading, setLoading] = useState(false);
   const [feedback, setFeedback] = useState(null);
   const [showConfetti, setShowConfetti] = useState(false);
+  const [coinActive, setCoinActive] = useState(false);
   const [historyLogs, setHistoryLogs] = useState([]);
 
   // Load initial data
@@ -77,6 +81,10 @@ export default function App() {
       setStatus(res.status);
       setFeedback({ type: 'success', message: res.message });
 
+      // Kích hoạt đồng xu 3D rơi
+      setCoinActive(true);
+      setTimeout(() => setCoinActive(false), 2000);
+
       if (res.is_week_completed) {
         playVictoryFanfare();
         setShowConfetti(true);
@@ -115,6 +123,10 @@ export default function App() {
         type: 'success',
         message: `Đã tiến sang ngày tiếp theo (+50k)! Tiến độ tô màu 3D: ${newStatus.current_streak}/7 ngày ✨`,
       });
+
+      // Kích hoạt đồng xu 3D rơi
+      setCoinActive(true);
+      setTimeout(() => setCoinActive(false), 2000);
 
       if (newStatus.is_week_completed) {
         playVictoryFanfare();
@@ -158,57 +170,104 @@ export default function App() {
         {/* 7-Days Blooming Tracker */}
         <StreakTracker status={status} />
 
-        {/* Mode Switcher: 3D Model vs 2D Picture */}
-        <div className="flex items-center justify-center gap-2 mb-4">
-          <div className="bg-white/90 p-1.5 rounded-full border-2 border-[#FFD1DC] shadow-sm flex items-center gap-1.5">
+        {/* ============================================================== */}
+        {/* THANH ĐIỀU HƯỚNG TÍNH NĂNG (FEATURE NAVIGATION TABS) */}
+        {/* ============================================================== */}
+        <div className="flex items-center justify-center gap-1.5 sm:gap-2 mb-6 overflow-x-auto py-1">
+          <div className="bg-white/95 p-1.5 rounded-full border-2 border-[#FFD1DC] shadow-sm flex items-center gap-1 sm:gap-1.5">
             <button
               type="button"
-              onClick={() => setViewMode('3d')}
-              className={`px-4 py-1.5 rounded-full text-xs font-black transition-all flex items-center gap-1.5 cursor-pointer ${
-                viewMode === '3d'
+              onClick={() => setActiveTab('3d')}
+              className={`px-3.5 sm:px-4 py-2 rounded-full text-xs font-black transition-all flex items-center gap-1.5 cursor-pointer active:scale-95 ${
+                activeTab === '3d'
                   ? 'bg-gradient-to-r from-[#FF94B8] to-[#FF8E9E] text-white shadow-sm'
                   : 'text-[#8C7A75] hover:text-[#5C4B47]'
               }`}
             >
               <span>🎮</span>
-              <span>Mô Hình 3D Tương Tác</span>
+              <span>Mô Hình 3D</span>
             </button>
 
             <button
               type="button"
-              onClick={() => setViewMode('2d')}
-              className={`px-4 py-1.5 rounded-full text-xs font-black transition-all flex items-center gap-1.5 cursor-pointer ${
-                viewMode === '2d'
+              onClick={() => setActiveTab('dashboard')}
+              className={`px-3.5 sm:px-4 py-2 rounded-full text-xs font-black transition-all flex items-center gap-1.5 cursor-pointer active:scale-95 ${
+                activeTab === 'dashboard'
+                  ? 'bg-gradient-to-r from-[#FF94B8] to-[#FF8E9E] text-white shadow-sm'
+                  : 'text-[#8C7A75] hover:text-[#5C4B47]'
+              }`}
+            >
+              <span>📊</span>
+              <span>Thống Kê Quỹ</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setActiveTab('badges')}
+              className={`px-3.5 sm:px-4 py-2 rounded-full text-xs font-black transition-all flex items-center gap-1.5 cursor-pointer active:scale-95 ${
+                activeTab === 'badges'
+                  ? 'bg-gradient-to-r from-[#FF94B8] to-[#FF8E9E] text-white shadow-sm'
+                  : 'text-[#8C7A75] hover:text-[#5C4B47]'
+              }`}
+            >
+              <span>🏅</span>
+              <span>Huy Hiệu</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setActiveTab('picture')}
+              className={`px-3.5 sm:px-4 py-2 rounded-full text-xs font-black transition-all flex items-center gap-1.5 cursor-pointer active:scale-95 ${
+                activeTab === 'picture'
                   ? 'bg-gradient-to-r from-[#FF94B8] to-[#FF8E9E] text-white shadow-sm'
                   : 'text-[#8C7A75] hover:text-[#5C4B47]'
               }`}
             >
               <span>🖼️</span>
-              <span>Bức Tranh Mảnh Ghép 2D</span>
+              <span>Tranh Mảnh Ghép</span>
             </button>
           </div>
         </div>
 
-        {/* Centerpiece: Interactive 3D Model OR 2D Picture Reveal */}
-        {viewMode === '3d' ? (
-          <Savings3DViewer status={status} />
-        ) : (
+        {/* Tab 1: Mô Hình 3D & Bỏ Heo */}
+        {activeTab === '3d' && (
+          <>
+            {/* Bộ Chọn Mục Tiêu Tiết Kiệm (Savings Goals) */}
+            <SavingsGoalsSelector />
+
+            {/* Mô Hình 3D Tương Tác Canvas */}
+            <Savings3DViewer status={status} coinActive={coinActive} />
+
+            {/* Check-In Marshmallow Button & Controls */}
+            <CheckInButton
+              status={status}
+              onCheckIn={handleCheckIn}
+              onReset={handleReset}
+              onSimulateDay={handleSimulateDay}
+              loading={loading}
+              feedback={feedback}
+            />
+          </>
+        )}
+
+        {/* Tab 2: Thống Kê Tài Chính & Cấp Độ Heo Đất */}
+        {activeTab === 'dashboard' && (
+          <FinancialDashboard status={status} historyLogs={historyLogs} />
+        )}
+
+        {/* Tab 3: Phòng Truyền Thống & Huy Hiệu */}
+        {activeTab === 'badges' && (
+          <AchievementBadges status={status} />
+        )}
+
+        {/* Tab 4: Bức Tranh 2D & Lưu Bưu Thiếp */}
+        {activeTab === 'picture' && (
           <PictureReveal
             status={status}
             theme={theme}
             useCustomImage={useCustomImage}
           />
         )}
-
-        {/* Check-In Marshmallow Button & Controls */}
-        <CheckInButton
-          status={status}
-          onCheckIn={handleCheckIn}
-          onReset={handleReset}
-          onSimulateDay={handleSimulateDay}
-          loading={loading}
-          feedback={feedback}
-        />
 
         {/* Khu vườn thói quen 30 ngày trong tháng */}
         <GardenCalendar status={status} historyLogs={historyLogs} />

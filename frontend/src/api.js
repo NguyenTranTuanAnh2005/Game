@@ -1,14 +1,14 @@
 const API_BASE = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
 
 export async function fetchSavingsStatus(month = null) {
-  const url = month ? `${API_BASE}/api/savings/status?month=${month}` : `${API_BASE}/api/savings/status`;
+  const url = month ? `${API_BASE}/api/status?month=${month}` : `${API_BASE}/api/status`;
   const res = await fetch(url);
   if (!res.ok) throw new Error('Không thể tải trạng thái tiết kiệm 3D');
   return res.json();
 }
 
 export async function performSavingsCheckIn(amount = 50000, note = null, simulatedDate = null) {
-  const res = await fetch(`${API_BASE}/api/savings/check-in`, {
+  const res = await fetch(`${API_BASE}/api/checkin`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ amount, note, simulated_date: simulatedDate }),
@@ -18,6 +18,13 @@ export async function performSavingsCheckIn(amount = 50000, note = null, simulat
     throw new Error(data.detail || 'Lỗi khi điểm danh tiết kiệm');
   }
   return data;
+}
+
+export async function fetchMonthlyThemeAndModel(month = null) {
+  const url = month ? `${API_BASE}/api/monthly-theme?month=${month}` : `${API_BASE}/api/monthly-theme`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error('Không thể tải cấu hình 3D theo tháng');
+  return res.json();
 }
 
 export async function resetSavingsStreak() {

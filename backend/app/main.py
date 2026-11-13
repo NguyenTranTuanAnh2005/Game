@@ -56,9 +56,10 @@ def root():
 
 
 # ==========================================
-# SAVINGS & 3D STREAK ENDPOINTS
+# SAVINGS & 3D STREAK ENDPOINTS (CLIENT-SERVER REST API)
 # ==========================================
 
+@app.get("/api/status", response_model=SavingsStatusResponse, tags=["Savings & 3D"])
 @app.get("/api/savings/status", response_model=SavingsStatusResponse, tags=["Savings & 3D"])
 def get_status(month: Optional[int] = Query(None, ge=1, le=12, description="Xem trước theo tháng (1-12)")):
     """Lấy trạng thái chuỗi điểm danh, số tiền tiết kiệm và tiến trình render mô hình 3D."""
@@ -66,6 +67,7 @@ def get_status(month: Optional[int] = Query(None, ge=1, le=12, description="Xem 
     return get_savings_status(theme_month=month_val)
 
 
+@app.post("/api/checkin", tags=["Savings & 3D"])
 @app.post("/api/savings/check-in", tags=["Savings & 3D"])
 def check_in_savings(payload: Optional[SavingsCheckInRequest] = None):
     """Điểm danh tiết kiệm ngày hôm nay (+tiền, mở thêm 1/7 màu sắc mô hình 3D)."""
@@ -93,6 +95,19 @@ def check_in_savings(payload: Optional[SavingsCheckInRequest] = None):
         "is_week_completed": new_status.is_week_completed,
         "message": message,
         "status": new_status
+    }
+
+
+@app.get("/api/monthly-theme", tags=["Savings & 3D"])
+def get_monthly_theme_and_model(month: Optional[int] = Query(None, ge=1, le=12)):
+    """Trả về cấu hình chủ đề tháng và metadata mô hình 3D tương ứng theo tháng."""
+    month_val = month if isinstance(month, int) else None
+    status_data = get_savings_status(theme_month=month_val)
+    theme_data = get_theme_for_month(month_val)
+    return {
+        "month": status_data.model_3d.month,
+        "theme": theme_data,
+        "model_3d": status_data.model_3d
     }
 
 
