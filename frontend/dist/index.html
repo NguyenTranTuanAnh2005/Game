@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><text y='20' font-size='20'>🌸</text></svg>" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Daily Habit Tracker - Bức Tranh Mộng Mơ 🌸</title>
+    
+    <!-- Google Fonts: Quicksand & Nunito (Soft & Chubby Typography) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Quicksand:wght@500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS CDN with Kawaii Pastel Configuration -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ['"Quicksand"', '"Nunito"', 'sans-serif'],
+              chubby: ['"Nunito"', 'sans-serif'],
+            },
+            colors: {
+              pastel: {
+                cream: '#FFFDF9',
+                vanilla: '#FFF8F0',
+                pink: '#FFD1DC',
+                hotpink: '#FF94B8',
+                strawberry: '#FF6B8B',
+                butter: '#FFF3B0',
+                mint: '#D8F3DC',
+                mintdark: '#95D5B2',
+                babyblue: '#D0E8FF',
+                lavender: '#E8D7F1',
+                peach: '#FFD8BE',
+                cocoa: '#5C4B47',
+                cocoalight: '#8C7A75',
+              }
+            },
+            boxShadow: {
+              'marshmallow': '0 12px 28px -6px rgba(255, 148, 184, 0.25), 0 8px 12px -4px rgba(255, 182, 193, 0.2)',
+              'jelly': '0 8px 20px -4px rgba(255, 209, 220, 0.5), inset 0 2px 4px rgba(255, 255, 255, 0.8)',
+              'cloud': '0 15px 35px -5px rgba(216, 243, 220, 0.4), 0 5px 15px rgba(0,0,0,0.02)',
+              'soft': '0 8px 24px rgba(149, 117, 122, 0.08)',
+              'inner-soft': 'inset 0 3px 6px rgba(0, 0, 0, 0.03)',
+            },
+            animation: {
+              'bounce-gentle': 'bounceGentle 2.5s infinite ease-in-out',
+              'float': 'float 3.5s ease-in-out infinite',
+              'sparkle-pulse': 'sparklePulse 1.8s infinite',
+              'wiggle': 'wiggle 1s ease-in-out infinite',
+            },
+            keyframes: {
+              bounceGentle: {
+                '0%, 100%': { transform: 'translateY(0)' },
+                '50%': { transform: 'translateY(-6px)' },
+              },
+              float: {
+                '0%, 100%': { transform: 'translateY(0px) rotate(0deg)' },
+                '50%': { transform: 'translateY(-8px) rotate(1.5deg)' },
+              },
+              sparklePulse: {
+                '0%, 100%': { transform: 'scale(1) rotate(0deg)', opacity: '0.85' },
+                '50%': { transform: 'scale(1.15) rotate(8deg)', opacity: '1' },
+              },
+              wiggle: {
+                '0%, 100%': { transform: 'rotate(-3deg)' },
+                '50%': { transform: 'rotate(3deg)' },
+              }
+            }
+          }
+        }
+      }
+    </script>
+    <script type="module" crossorigin src="/assets/index-BI0ii_wa.js"></script>
+    <link rel="stylesheet" crossorigin href="/assets/index-iMny1gir.css">
+  </head>
+  <body class="bg-[#FFF8F4] text-[#5C4B47] min-h-screen antialiased selection:bg-[#FFD1DC] selection:text-[#5C4B47] font-sans">
+    <div id="root"></div>
+  </body>
+</html>

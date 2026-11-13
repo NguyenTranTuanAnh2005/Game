@@ -1,0 +1,72 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    background-color: #FFF9F6;
+    background-image: radial-gradient(#FDE2E4 1.5px, transparent 1.5px);
+    background-size: 24px 24px;
+    color: #5C4B47;
+    font-family: 'Quicksand', 'Nunito', sans-serif;
+  }
+}
+
+/* Custom Soft Scrollbar */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: #FFF0F3;
+  border-radius: 10px;
+}
+::-webkit-scrollbar-thumb {
+  background: #FFCAD4;
+  border-radius: 10px;
+  border: 2px solid #FFF0F3;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #FFB3C1;
+}
+
+/* Marshmallow / Squishy Button Effect */
+.btn-squishy {
+  transition: all 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
+  box-shadow: 0 8px 16px -2px rgba(255, 148, 184, 0.3), 0 4px 6px -2px rgba(255, 182, 193, 0.2);
+}
+.btn-squishy:hover {
+  transform: translateY(-3px) scale(1.02);
+  box-shadow: 0 12px 22px -3px rgba(255, 148, 184, 0.4), 0 6px 8px -2px rgba(255, 182, 193, 0.25);
+}
+.btn-squishy:active {
+  transform: translateY(2px) scale(0.94);
+  box-shadow: 0 3px 6px -1px rgba(255, 148, 184, 0.3);
+}
+
+/* Cloud-like Card */
+.kawaii-card {
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 3px solid #FFF0F5;
+  border-radius: 2rem;
+  box-shadow: 0 14px 30px -5px rgba(255, 182, 193, 0.2), 0 6px 12px -3px rgba(186, 215, 242, 0.15);
+}
+
+/* Tile Revealed & Locked Transitions */
+.kawaii-tile-locked {
+  background: rgba(255, 250, 252, 0.92);
+  backdrop-filter: blur(8px);
+  border: 2.5px dashed #FFCCD5;
+  border-radius: 1.5rem;
+  transition: all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.kawaii-tile-revealed {
+  opacity: 0;
+  pointer-events: none;
+  transform: scale(0.88) rotate(4deg);
+  filter: blur(8px);
+  transition: all 0.7s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
