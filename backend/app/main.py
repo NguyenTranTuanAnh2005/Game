@@ -5,16 +5,18 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 import urllib.request
 
-from .database import init_db, get_history_logs
+from .database import init_db, get_history_logs, get_temptation_logs
 from .models import (
     SavingsStatusResponse,
     SavingsCheckInRequest,
+    ResistTemptationRequest,
     Model3DMetadata,
     MonthlyTheme,
 )
 from .streak_service import (
     get_savings_status,
     execute_savings_check_in,
+    execute_resist_temptation,
     reset_savings_streak,
     simulate_next_savings_day,
 )
@@ -23,11 +25,11 @@ from .theme_service import get_theme_for_month, get_all_themes
 
 app = FastAPI(
     title="Gamified 3D Daily Savings & Streak Tracker API",
-    description="Backend API phục vụ điểm danh tiết kiệm hàng ngày trực quan hóa mô hình 3D sự kiện theo tháng.",
-    version="2.0.0",
+    description="Backend API phục vụ điểm danh tiết kiệm hàng ngày trực quan hóa mô hình 3D sự kiện theo tháng, nâng cấp theo tuần và kiềm chế cám dỗ.",
+    version="2.1.0",
 )
 
-# Cấu hình CORS
+# Cấu hình CORS mở cho Client React
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -51,18 +53,18 @@ def root():
         "app": "Gamified 3D Daily Savings Tracker API",
         "status": "online",
         "docs_url": "/docs",
-        "version": "2.0.0"
+        "version": "2.1.0"
     }
 
 
 # ==========================================
-# SAVINGS & 3D STREAK ENDPOINTS (CLIENT-SERVER REST API)
+# SAVINGS & 3D STREAK REST API ENDPOINTS
 # ==========================================
 
 @app.get("/api/status", response_model=SavingsStatusResponse, tags=["Savings & 3D"])
 @app.get("/api/savings/status", response_model=SavingsStatusResponse, tags=["Savings & 3D"])
 def get_status(month: Optional[int] = Query(None, ge=1, le=12, description="Xem trước theo tháng (1-12)")):
-    """Lấy trạng thái chuỗi điểm danh, số tiền tiết kiệm và tiến trình render mô hình 3D."""
+    """Lấy trạng thái chuỗi điểm danh, cấp độ Tier mô hình 3D, khiên bảo vệ và tiến trình render."""
     month_val = month if isinstance(month, int) else None
     return get_savings_status(theme_month=month_val)
 
@@ -98,6 +100,26 @@ def check_in_savings(payload: Optional[SavingsCheckInRequest] = None):
     }
 
 
+@app.post("/api/savings/resist-temptation", tags=["Savings & 3D"])
+def resist_temptation_endpoint(payload: ResistTemptationRequest):
+    """Ghi nhận hành động kiềm chế cám dỗ (nhịn chi tiêu phung phí), nạp năng lượng phát sáng 3D."""
+    success, message, new_status = execute_resist_temptation(
+        item_name=payload.item_name,
+        amount=payload.amount
+    )
+    return {
+        "success": success,
+        "message": message,
+        "status": new_status
+    }
+
+
+@app.get("/api/savings/temptations", tags=["Savings & 3D"])
+def get_temptations_history(limit: int = Query(10, ge=1, le=50)):
+    """Lấy nhật ký những lần kiềm chế cám dỗ thành công."""
+    return {"temptations": get_temptation_logs(limit=limit)}
+
+
 @app.get("/api/monthly-theme", tags=["Savings & 3D"])
 def get_monthly_theme_and_model(month: Optional[int] = Query(None, ge=1, le=12)):
     """Trả về cấu hình chủ đề tháng và metadata mô hình 3D tương ứng theo tháng."""
@@ -113,7 +135,7 @@ def get_monthly_theme_and_model(month: Optional[int] = Query(None, ge=1, le=12))
 
 @app.post("/api/savings/reset", response_model=SavingsStatusResponse, tags=["Savings & 3D"])
 def reset_savings():
-    """Reset chuỗi streak hiện tại về 0 để thử nghiệm lại."""
+    """Reset chuỗi streak tuần hiện tại về 0 để thử nghiệm lại."""
     return reset_savings_streak()
 
 
@@ -138,12 +160,43 @@ def get_savings_history(limit: int = Query(14, ge=1, le=100)):
 
 
 # ==========================================
-# COMPATIBILITY & THEME ENDPOINTS
+# THEME & COMPATIBILITY ENDPOINTS
 # ==========================================
 
+@app.get("/api/theme", response_model=MonthlyTheme, tags=["Themes"])
+def get_theme(month: Optional[int] = Query(None, ge=1, le=12)):
+    month_val = month if isinstance(month, int) else None
+    return get_theme_for_month(month_val)
+
+
+@app.get("/api/themes", tags=["Themes"])
+def get_all_themes_endpoint():
+    return {"themes": get_all_themes()}
+
+
+@app.get("/api/proxy-image", tags=["Utility"])
+def proxy_image(url: str):
+    """Proxy trung gian tải ảnh để tránh lỗi CORS khi xuất bưu thiếp qua html2canvas."""
+    local_fallback = os.path.join(STATIC_DIR, "images", "download.jpg")
+    try:
+        req = urllib.request.Request(
+            url,
+            headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"}
+        )
+        with urllib.request.urlopen(req, timeout=4) as response:
+            image_data = response.read()
+            content_type = response.headers.get("content-type", "image/jpeg")
+            return Response(content=image_data, media_type=content_type)
+    except Exception:
+        if os.path.exists(local_fallback):
+            with open(local_fallback, "rb") as f:
+                return Response(content=f.read(), media_type="image/jpeg")
+        raise HTTPException(status_code=404, detail="Image not found")
+
+
+# Backward compatibility
 @app.get("/api/streak", tags=["Compatibility"])
 def get_legacy_streak(month: Optional[int] = Query(None, ge=1, le=12)):
-    """Hỗ trợ tương thích ngược với API streak cũ."""
     month_val = month if isinstance(month, int) else None
     return get_savings_status(theme_month=month_val)
 
@@ -159,50 +212,5 @@ def legacy_reset():
 
 
 @app.post("/api/streak/simulate-day", tags=["Compatibility"])
-def legacy_simulate():
-    return simulate_next_savings_day()
-
-
-@app.get("/api/theme", response_model=MonthlyTheme, tags=["Theme"])
-def get_monthly_theme(month: Optional[int] = Query(None, ge=1, le=12)):
-    month_val = month if isinstance(month, int) else None
-    return get_theme_for_month(month_val)
-
-
-@app.get("/api/themes", tags=["Theme"])
-def list_themes():
-    return {"themes": get_all_themes()}
-
-
-@app.get("/api/proxy-image", tags=["Theme"])
-def proxy_image(url: str = Query(..., description="URL ảnh cần proxy")):
-    """Proxy ảnh ngoài để khắc phục triệt để lỗi CORS khi xuất bưu thiếp qua Canvas."""
-    if url.startswith("/static/") or url.startswith("static/"):
-        rel_path = url.lstrip("/")
-        full_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), rel_path)
-        if os.path.exists(full_path):
-            with open(full_path, "rb") as f:
-                data = f.read()
-            return Response(
-                content=data,
-                media_type="image/jpeg",
-                headers={"Access-Control-Allow-Origin": "*", "Cache-Control": "public, max-age=86400"}
-            )
-
-    try:
-        req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"})
-        with urllib.request.urlopen(req, timeout=10) as response:
-            content_type = response.headers.get_content_type() or "image/jpeg"
-            data = response.read()
-            return Response(
-                content=data,
-                media_type=content_type,
-                headers={"Access-Control-Allow-Origin": "*", "Cache-Control": "public, max-age=86400"}
-            )
-    except Exception:
-        fallback_path = os.path.join(STATIC_DIR, "images", "download.jpg")
-        if os.path.exists(fallback_path):
-            with open(fallback_path, "rb") as f:
-                data = f.read()
-            return Response(content=data, media_type="image/jpeg", headers={"Access-Control-Allow-Origin": "*"})
-        raise HTTPException(status_code=500, detail="Lỗi proxy ảnh")
+def legacy_simulate(amount: float = Query(50000)):
+    return simulate_next_savings_day(amount=amount)

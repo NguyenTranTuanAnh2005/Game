@@ -5,10 +5,16 @@ from datetime import datetime
 
 DB_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "habits.db")
 
+_db_initialized = False
+
 
 def get_db_connection() -> sqlite3.Connection:
+    global _db_initialized
     conn = sqlite3.connect(DB_PATH, check_same_thread=False)
     conn.row_factory = sqlite3.Row
+    if not _db_initialized:
+        _db_initialized = True
+        init_db()
     return conn
 
 
@@ -28,11 +34,14 @@ def init_db():
             monthly_money_saved REAL NOT NULL DEFAULT 0,
             weekly_money_saved REAL NOT NULL DEFAULT 0,
             week_in_month INTEGER NOT NULL DEFAULT 1,
+            streak_freeze_count INTEGER NOT NULL DEFAULT 1,
+            glow_energy INTEGER NOT NULL DEFAULT 0,
+            temptation_saved REAL NOT NULL DEFAULT 0,
             updated_at TEXT NOT NULL
         )
     """)
 
-    # Bổ sung các cột mới nếu bảng đã tồn tại từ trước (safe migration)
+    # Safe migration: bổ sung các cột mới nếu đã tồn tại từ phiên bản cũ
     cursor.execute("PRAGMA table_info(streak_state)")
     columns = [row[1] for row in cursor.fetchall()]
     if "total_money_saved" not in columns:
@@ -43,6 +52,12 @@ def init_db():
         cursor.execute("ALTER TABLE streak_state ADD COLUMN weekly_money_saved REAL NOT NULL DEFAULT 0")
     if "week_in_month" not in columns:
         cursor.execute("ALTER TABLE streak_state ADD COLUMN week_in_month INTEGER NOT NULL DEFAULT 1")
+    if "streak_freeze_count" not in columns:
+        cursor.execute("ALTER TABLE streak_state ADD COLUMN streak_freeze_count INTEGER NOT NULL DEFAULT 1")
+    if "glow_energy" not in columns:
+        cursor.execute("ALTER TABLE streak_state ADD COLUMN glow_energy INTEGER NOT NULL DEFAULT 0")
+    if "temptation_saved" not in columns:
+        cursor.execute("ALTER TABLE streak_state ADD COLUMN temptation_saved REAL NOT NULL DEFAULT 0")
 
     # Bảng lưu nhật ký từng ngày điểm danh kèm số tiền tiết kiệm
     cursor.execute("""
@@ -63,15 +78,26 @@ def init_db():
     if "amount" not in hist_cols:
         cursor.execute("ALTER TABLE check_in_history ADD COLUMN amount REAL NOT NULL DEFAULT 50000")
 
+    # Bảng lưu lịch sử kiềm chế cám dỗ
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS temptation_history (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            item_name TEXT NOT NULL,
+            amount REAL NOT NULL,
+            created_at TEXT NOT NULL
+        )
+    """)
+
     # Khởi tạo bản ghi mặc định nếu chưa tồn tại
     cursor.execute("SELECT COUNT(*) FROM streak_state WHERE id = 1")
     if cursor.fetchone()[0] == 0:
         cursor.execute("""
             INSERT INTO streak_state (
                 id, current_streak, last_check_in, total_cycles_completed, total_check_ins,
-                total_money_saved, monthly_money_saved, weekly_money_saved, week_in_month, updated_at
+                total_money_saved, monthly_money_saved, weekly_money_saved, week_in_month,
+                streak_freeze_count, glow_energy, temptation_saved, updated_at
             )
-            VALUES (1, 0, NULL, 0, 0, 0, 0, 0, 1, ?)
+            VALUES (1, 0, NULL, 0, 0, 0, 0, 0, 1, 1, 0, 0, ?)
         """, (datetime.now().isoformat(),))
 
     conn.commit()
@@ -97,19 +123,25 @@ def get_streak_state() -> Dict[str, Any]:
         "monthly_money_saved": 0.0,
         "weekly_money_saved": 0.0,
         "week_in_month": 1,
+        "streak_freeze_count": 1,
+        "glow_energy": 0,
+        "temptation_saved": 0.0,
         "updated_at": datetime.now().isoformat(),
     }
 
 
 def update_streak_state(
     current_streak: int,
-    last_check_in: str,
+    last_check_in: Optional[str],
     total_cycles_completed: int,
     total_check_ins: int,
     total_money_saved: float,
     monthly_money_saved: float,
     weekly_money_saved: float,
     week_in_month: int,
+    streak_freeze_count: int = 1,
+    glow_energy: int = 0,
+    temptation_saved: float = 0.0,
 ):
     conn = get_db_connection()
     cursor = conn.cursor()
@@ -123,6 +155,9 @@ def update_streak_state(
             monthly_money_saved = ?,
             weekly_money_saved = ?,
             week_in_month = ?,
+            streak_freeze_count = ?,
+            glow_energy = ?,
+            temptation_saved = ?,
             updated_at = ?
         WHERE id = 1
     """, (
@@ -134,6 +169,9 @@ def update_streak_state(
         monthly_money_saved,
         weekly_money_saved,
         week_in_month,
+        streak_freeze_count,
+        glow_energy,
+        temptation_saved,
         datetime.now().isoformat()
     ))
     conn.commit()
@@ -158,11 +196,35 @@ def add_check_in_log(check_in_date: str, cycle_number: int, day_in_cycle: int, a
     conn.close()
 
 
+def add_temptation_log(item_name: str, amount: float):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("""
+        INSERT INTO temptation_history (item_name, amount, created_at)
+        VALUES (?, ?, ?)
+    """, (item_name, amount, datetime.now().isoformat()))
+    conn.commit()
+    conn.close()
+
+
 def get_history_logs(limit: int = 14) -> List[Dict[str, Any]]:
     conn = get_db_connection()
     cursor = conn.cursor()
     cursor.execute("""
         SELECT * FROM check_in_history
+        ORDER BY id DESC
+        LIMIT ?
+    """, (limit,))
+    rows = cursor.fetchall()
+    conn.close()
+    return [dict(r) for r in rows]
+
+
+def get_temptation_logs(limit: int = 10) -> List[Dict[str, Any]]:
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("""
+        SELECT * FROM temptation_history
         ORDER BY id DESC
         LIMIT ?
     """, (limit,))

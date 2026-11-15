@@ -20,6 +20,25 @@ export async function performSavingsCheckIn(amount = 50000, note = null, simulat
   return data;
 }
 
+export async function resistTemptation(itemName = 'Ly trà sữa trân châu', amount = 35000) {
+  const res = await fetch(`${API_BASE}/api/savings/resist-temptation`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ item_name: itemName, amount }),
+  });
+  const data = await res.json();
+  if (!res.ok) {
+    throw new Error(data.detail || 'Lỗi khi ghi nhận kiềm chế cám dỗ');
+  }
+  return data;
+}
+
+export async function fetchTemptations() {
+  const res = await fetch(`${API_BASE}/api/savings/temptations?limit=10`);
+  if (!res.ok) throw new Error('Không thể tải nhật ký cám dỗ');
+  return res.json();
+}
+
 export async function fetchMonthlyThemeAndModel(month = null) {
   const url = month ? `${API_BASE}/api/monthly-theme?month=${month}` : `${API_BASE}/api/monthly-theme`;
   const res = await fetch(url);

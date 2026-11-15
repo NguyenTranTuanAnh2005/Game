@@ -236,7 +236,7 @@ export default function App() {
             <SavingsGoalsSelector />
 
             {/* Mô Hình 3D Tương Tác Canvas */}
-            <Savings3DViewer status={status} coinActive={coinActive} />
+            <Savings3DViewer status={status} coinActive={coinActive} selectedMonth={selectedMonth} />
 
             {/* Check-In Marshmallow Button & Controls */}
             <CheckInButton
@@ -244,6 +244,7 @@ export default function App() {
               onCheckIn={handleCheckIn}
               onReset={handleReset}
               onSimulateDay={handleSimulateDay}
+              onStatusUpdate={(newStatus) => setStatus(newStatus)}
               loading={loading}
               feedback={feedback}
             />
