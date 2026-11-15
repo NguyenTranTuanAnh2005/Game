@@ -27,9 +27,20 @@ class SavingsCheckInRequest(BaseModel):
     simulated_date: Optional[str] = Field(None, description="Giả lập ngày (YYYY-MM-DD)")
 
 
+class ResistTemptationRequest(BaseModel):
+    item_name: str = Field(default="Ly trà sữa trân châu", description="Tên món đồ / chi tiêu vừa nhịn được")
+    amount: float = Field(default=35000, ge=1000, description="Số tiền kiềm chế không tiêu (VNĐ)")
+
+
 class SavingsStatusResponse(BaseModel):
     current_streak: int = Field(..., ge=0, le=7, description="Số ngày điểm danh liên tiếp trong tuần (0-7)")
     week_in_month: int = Field(..., ge=1, le=5, description="Tuần thứ mấy trong tháng (1-5)")
+    tier_level: int = Field(1, ge=1, le=4, description="Cấp độ tiến hóa theo tuần của mô hình 3D (Tier 1-4)")
+    tier_name: str = Field("Tier 1: Mô hình nguyên bản", description="Tên cấp độ tiến hóa")
+    tier_description: str = Field("Mô hình 3D chủ đề cơ bản của tháng", description="Mô tả phụ kiện hoặc hiệu ứng đặc biệt")
+    streak_freeze_count: int = Field(1, description="Số lượng khiên bảo vệ chuỗi (Streak Freeze) sẵn có")
+    glow_energy: int = Field(0, description="Năng lượng phát sáng từ việc kiềm chế cám dỗ")
+    temptation_saved: float = Field(0.0, description="Tổng số tiền tiết kiệm được từ việc kiềm chế cám dỗ")
     total_cycles_completed: int = Field(0, description="Tổng số chu kỳ 7 ngày đã hoàn tất")
     total_money_saved: float = Field(0, description="Tổng số tiền đã tiết kiệm từ trước đến nay (VNĐ)")
     monthly_money_saved: float = Field(0, description="Số tiền đã tiết kiệm trong tháng hiện tại (VNĐ)")

@@ -16,6 +16,16 @@ export default defineConfig({
         changeOrigin: true,
       }
     }
+  },
+  build: {
+    chunkSizeWarningLimit: 1200,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'three-vendor': ['three', '@react-three/fiber', '@react-three/drei'],
+          'export-vendor': ['html2canvas', 'canvas-confetti'],
+        }
+      }
+    }
   }
 })
-

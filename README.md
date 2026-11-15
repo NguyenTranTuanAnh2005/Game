@@ -62,6 +62,9 @@
 
 ## 🚀 3. Hướng Dẫn Khởi Động
 
-1. **Khởi động Backend:** Double-click file `run_backend.bat` (Port: `8000`).
-2. **Khởi động Frontend:** Double-click file `run_frontend.bat` (Port: `5173`).
+Xem tài liệu chi tiết tại: 👉 **[HUONG_DAN_KHOI_DONG.md](file:///c:/Users/acer/OneDrive/Desktop/Game/HUONG_DAN_KHOI_DONG.md)**
+
+1. **Khởi động Backend:** Double-click file [`run_backend.bat`](file:///c:/Users/acer/OneDrive/Desktop/Game/run_backend.bat) (Port: `8000`).
+2. **Khởi động Frontend:** Double-click file [`run_frontend.bat`](file:///c:/Users/acer/OneDrive/Desktop/Game/run_frontend.bat) (Port: `5173`).
 3. Truy cập trình duyệt tại **`http://localhost:5173`** để trải nghiệm đầy đủ các tính năng mới!
+
